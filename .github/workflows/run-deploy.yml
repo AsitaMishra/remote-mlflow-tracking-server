@@ -1,0 +1,91 @@
+name: Deploy MLFlow Server
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{secrets.PROJECT_ID}}
+  REGION: ${{secrets.REGION}}
+  SERVICE_ACCOUNT: ${{secrets.SERVICE_ACCOUNT}}
+
+  BUCKET: ${{secrets.BUCKET}}
+  REPOSITORY: ${{secrets.REPOSITORY}}
+  DEPLOY_NAME: ${{secrets.DEPLOY_NAME}}
+  
+  SQL_INSTANCE: ${{secrets.SQL_INSTANCE}}
+  SQL_USER: ${{secrets.SQL_USER}}
+  SQL_PASSWORD: ${{secrets.SQL_PASSWORD}}
+  SQL_DATABASE: ${{secrets.SQL_DATABASE}}
+  DB_IP: ${{secrets.DB_IP}}
+
+jobs:
+  gcloud-auth:
+    runs-on: ubuntu-latest
+
+    steps:
+      - id: 'auth'
+        name: Authenticate To GCP
+        uses: google-github-actions/auth@v1
+        with:
+          project_id: ${{env.PROJECT_ID}}
+          credentials_json: ${{secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+    
+  update-secrets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify Artifact Store
+        run: 
+          gcloud secrets describe bucket_url
+          if [ $? -ne 0 ]; then
+            echo "bucket_url not found"
+            echo "Creating bucket_url secret..."
+            gcloud secrets create bucket_url
+            echo -n "gs://${{env.BUCKET}}" | gcloud secrets versions add bucket_url --data-file=-
+            echo "bucket_url created"
+          else
+              echo "bucket_url found"
+          fi
+
+      - name: Verify Backend Store
+        run:
+          gcloud secrets describe database_url
+          if [ $? -ne 0 ]; then
+            echo "database_url not found"
+            echo "Creating database_url..."
+            gcloud secrets create database_url
+            echo -n "postgresql://${{env.SQL_USER}}:${{env.SQL_PASSWORD}}@${{env.DB_IP}}/${{env.SQL_DATABASE}}" | \
+            gcloud secrets versions add database_url --data-file=-
+
+  build-push:
+    runs-on: ubuntu-latest
+
+    steps:  
+      - name: Checkout
+        uses: actions/checkout@v3
+            
+      - name: Docker Config
+        run:
+          gcloud auth configure-docker ${{env.REGION}}-docker.pkg.dev
+            
+      - name: Build Image
+        run:
+          docker build -t ${{env.REGION}}-docker.pkg.dev/${{env.PROJECT_ID}}/${{env.REPOSITORY}}/mlflow:${{github.sha}}
+
+      - name: Push Image
+        run:
+          docker push ${{env.REGION}}-docker.pkg.dev/${{env.PROJECT_ID}}/${{env.REPOSITORY}}/mlflow:${{github.sha}}
+            
+      - name: Deploy To Cloud Run
+        run:
+          gcloud run deploy ${{env.DEPLOY_NAME}} \
+          --region=${{env.REGION}} \
+          --service-account=${{env.SERVICE_ACCOUNT}} \
+          --update-secrets=/secrets/credentials=${{secrets.GOOGLE_APPLICATION_CREDENTIALS}} \
+          --update-secrets=POSTGRESQL_URL=database_url:latest \
+          --update-secrets=STORAGE_URL=bucket_url:latest \
+          --allow-unauthenticated \
+          --port=5000 \
+          --image=${{env.REGION}}-docker.pkg.dev/${{env.PROJECT_ID}}/${{env.REPOSITORY}}/mlflow:${{github.sha}}
