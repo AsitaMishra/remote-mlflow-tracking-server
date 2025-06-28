@@ -41,7 +41,7 @@ gcloud sql databases create DATABASE_NAME --instance=<INSTANCE_NAME>
 ```
 gcloud secrets create database_url
 
-echo -n "postgresql://<USERNAME>:<PASSWORD>@<IP>/<DATABASE-NAME>" | \
+echo -n "postgresql://<SQL_USER>:<SQL_PASSWORD>@<DB_IP>/<SQL_DATABASE>" | \
     gcloud secrets versions add database_url --data-file=-
 ```
 
@@ -49,7 +49,7 @@ echo -n "postgresql://<USERNAME>:<PASSWORD>@<IP>/<DATABASE-NAME>" | \
 ```
 gcloud secrets create bucket_url
 
-echo -n "gs://BUCKET-NAME/mlruns" | \
+echo -n "gs://<BUCKET>/" | \
     gcloud secrets versions add bucket_url --data-file=-
 ```
 
