@@ -6,12 +6,12 @@ on:
       - main
 
 env:
-  PROJECT_ID: ${{secrets.PROJECT_ID}}
-  REGION: ${{secrets.REGION}}
-  SERVICE_ACCOUNT: ${{secrets.SERVICE_ACCOUNT}}
+  PROJECT_ID: ${{ secrets.PROJECT_ID }}
+  REGION: ${{ secrets.REGION }}
+  SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT }}
 
-  REPOSITORY: ${{secrets.REPOSITORY}}
-  DEPLOY_NAME: ${{secrets.DEPLOY_NAME}}
+  REPOSITORY: ${{ secrets.REPOSITORY }}
+  DEPLOY_NAME: ${{ secrets.DEPLOY_NAME }}
 
 jobs:
   build-push:
@@ -42,12 +42,12 @@ jobs:
             
       - name: Deploy To Cloud Run
         run:
-          gcloud run deploy ${{ env.DEPLOY_NAME }} \
-          --region=${{ env.REGION }} \
-          --service-account=${{ env.SERVICE_ACCOUNT }} \
-          --update-secrets=/secrets/credentials=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} \
+          gcloud run deploy "${{ env.DEPLOY_NAME }}" \
+          --region="${{ env.REGION }}" \
+          --service-account="${{ env.SERVICE_ACCOUNT }}" \
+          --update-secrets=/secrets/credentials="${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" \
           --update-secrets=POSTGRESQL_URL=database_url:latest \
           --update-secrets=STORAGE_URL=bucket_url:latest \
           --allow-unauthenticated \
           --port=5000 \
-          --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}
+          --image="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}"
