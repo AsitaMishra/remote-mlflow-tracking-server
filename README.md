@@ -1,4 +1,4 @@
-A Repo To Deploy A Remote MLFLOW Tracking Server To GCP Cloud Run Using Github Actions
+A Repository To Deploy A Remote MLFLOW Tracking Server To GCP Cloud Run Using Github Actions
 
 Ensure You Have Executed To Following Commands To Create The Artifact And Backend Stores For Your MLFLOW Tracking Server, Or Create Them Using Gcloud Console.
 
