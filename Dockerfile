@@ -2,8 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /
 
-ENV GOOGLE_APPLICATION_CREDENTIALS="./secrets/credentials"
-
 COPY run-server.sh run-server.sh
 
 RUN chmod +x run-server.sh
