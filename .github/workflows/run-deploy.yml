@@ -10,59 +10,21 @@ env:
   REGION: ${{secrets.REGION}}
   SERVICE_ACCOUNT: ${{secrets.SERVICE_ACCOUNT}}
 
-  BUCKET: ${{secrets.BUCKET}}
   REPOSITORY: ${{secrets.REPOSITORY}}
   DEPLOY_NAME: ${{secrets.DEPLOY_NAME}}
-  
-  SQL_INSTANCE: ${{secrets.SQL_INSTANCE}}
-  SQL_USER: ${{secrets.SQL_USER}}
-  SQL_PASSWORD: ${{secrets.SQL_PASSWORD}}
-  SQL_DATABASE: ${{secrets.SQL_DATABASE}}
-  DB_IP: ${{secrets.DB_IP}}
 
 jobs:
-  gcloud-auth:
+  build-push:
     runs-on: ubuntu-latest
 
-    steps:
+    steps:  
       - id: 'auth'
         name: Authenticate To GCP
         uses: google-github-actions/auth@v1
         with:
           project_id: ${{env.PROJECT_ID}}
           credentials_json: ${{secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-    
-  update-secrets:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Verify Artifact Store
-        run: 
-          gcloud secrets describe bucket_url
-          if [ $? -ne 0 ]; then
-            echo "bucket_url not found"
-            echo "Creating bucket_url secret..."
-            gcloud secrets create bucket_url
-            echo -n "gs://${{env.BUCKET}}" | gcloud secrets versions add bucket_url --data-file=-
-            echo "bucket_url created"
-          else
-              echo "bucket_url found"
-          fi
-
-      - name: Verify Backend Store
-        run:
-          gcloud secrets describe database_url
-          if [ $? -ne 0 ]; then
-            echo "database_url not found"
-            echo "Creating database_url..."
-            gcloud secrets create database_url
-            echo -n "postgresql://${{env.SQL_USER}}:${{env.SQL_PASSWORD}}@${{env.DB_IP}}/${{env.SQL_DATABASE}}" | \
-            gcloud secrets versions add database_url --data-file=-
-
-  build-push:
-    runs-on: ubuntu-latest
-
-    steps:  
+          
       - name: Checkout
         uses: actions/checkout@v3
             
