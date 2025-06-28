@@ -37,6 +37,22 @@ gcloud sql users create <SQL_USERNAME> \
 gcloud sql databases create DATABASE_NAME --instance=<INSTANCE_NAME>
 ```
 
+[Add Backend Store URL To GCP Secrets]:
+```
+gcloud secrets create database_url
+
+echo -n "postgresql://<USERNAME>:<PASSWORD>@<IP>/<DATABASE-NAME>" | \
+    gcloud secrets versions add database_url --data-file=-
+```
+
+[Add Artifact Store URL To GCP Secrets]:
+```
+gcloud secrets create bucket_url
+
+echo -n "gs://BUCKET-NAME/mlruns" | \
+    gcloud secrets versions add bucket_url --data-file=-
+```
+
 [Secrets To Set For Github Actions](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions):
 ```
 PROJECT_ID

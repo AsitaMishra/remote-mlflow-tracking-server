@@ -32,14 +32,10 @@ jobs:
         run:
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
             
-      - name: Build Image
+      - name: Build and Push Image
         run:
-          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }} .
+          gcloud builds submit -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}
 
-      - name: Push Image
-        run:
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}
-            
       - name: Deploy To Cloud Run
         run:
           gcloud run deploy ${{ env.DEPLOY_NAME }} \
